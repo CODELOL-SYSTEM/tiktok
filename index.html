@@ -37,6 +37,8 @@ input,select{font:inherit;background:#0008;color:var(--chalk);border:1px solid #
 #banner{left:50%;top:22%;transform:translateX(-50%);font:7vmin 'Bowlby One',sans-serif;color:#fff;display:none;white-space:nowrap}
 #back{left:18px;bottom:18px;pointer-events:auto;padding:9px 14px}
 #cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;background:#fff;border-radius:50%;box-shadow:0 0 0 2px #000a,0 0 0 9px #ffffff44;display:none;z-index:2;pointer-events:none}
+#tk{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:9;background:#000b;border:1px solid #fff3;border-radius:20px;padding:4px 14px;font-weight:700;font-size:13px;display:flex;gap:8px;align-items:center;pointer-events:none}
+#tk i{width:10px;height:10px;border-radius:50%;background:#8a8f94}#tk.ok i{background:var(--green);box-shadow:0 0 8px var(--green)}#tk.wait i{background:var(--sun)}#tk.err i{background:var(--red)}
 #lock{position:fixed;left:50%;top:62%;transform:translateX(-50%);display:none;z-index:3;background:#000d;padding:14px 22px;border-radius:12px;font-weight:700;pointer-events:none;text-align:center}
 #test{right:14px;bottom:14px;pointer-events:auto;display:none;background:#000b;padding:10px;border-radius:12px;width:min(330px,60vw)}
 body.test #test.on{display:block}
@@ -47,6 +49,7 @@ body.fs-hide{cursor:crosshair}
 </style></head>
 <body>
 <canvas id="c"></canvas>
+<div id="tk"><i></i><span>TikFinity : déconnecté</span></div>
 <div id="cross"></div>
 <div id="lock">Cliquez dans le jeu pour reprendre le contrôle<br><small>ZQSD · Espace · Souris · Clic gauche · Échap libère la souris (menu, mode test)</small></div>
 <div id="hud">
@@ -89,8 +92,8 @@ body.fs-hide{cursor:crosshair}
 <div class="pane" id="conn"><div class="modal"><h2>TikTok LIVE (TikFinity)</h2>
  <p class="sub" style="margin:0 0 12px">L'application TikFinity doit tourner sur ce PC. Adresse de son API d'événements :</p>
  <input id="cUrl" value="ws://127.0.0.1:21213/">
- <p id="cStatus" class="sub" style="margin:12px 0">Non connecté.</p>
- <div class="col"><button class="b p" id="cGo">Se connecter</button><button class="b" data-a="close">Fermer</button></div></div></div>
+ <p id="cStatus" class="sub" style="margin:12px 0 4px">déconnecté</p><p id="cStats" class="sub" style="margin:0 0 12px;font-size:13px"></p>
+ <div class="col"><button class="b p" id="cGo">Se connecter</button><button class="b" id="cStop">Se déconnecter</button><button class="b" data-a="close">Fermer</button></div></div></div>
 
 <div class="pane" id="goal"><div class="modal" style="text-align:center"><h2>Objectif atteint !</h2>
  <p class="sub" style="margin:0 auto 18px">Le compteur de WIN a atteint la cible.</p>
