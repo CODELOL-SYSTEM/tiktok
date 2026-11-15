@@ -4,7 +4,7 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 /* ================= Utilitaires & réglages ================= */
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=u=>{u=clamp(u,0,1);return u*u*(3-2*u)};
-const DEF={vol:.8,sfx:.8,win:3,likes:2,q:'med',sens:1};
+const DEF={vol:.8,sfx:.8,win:3,likes:2,q:'med',sens:1,url:'ws://127.0.0.1:21213/',auto:0};
 const S=(()=>{try{return {...DEF,...JSON.parse(localStorage.getItem('tl_set')||'{}')}}catch{return {...DEF}}})();
 const save=()=>{try{localStorage.setItem('tl_set',JSON.stringify(S))}catch{}};
 const QUAL={low:{pr:1,cap:4000,sh:false,pt:300},med:{pr:1.5,cap:10000,sh:false,pt:700},high:{pr:2,cap:20000,sh:true,pt:1400}};
@@ -55,15 +55,15 @@ const rod=(a,b,r,mat)=>{const d=b.clone().sub(a),m=new THREE.Mesh(new THREE.Cyli
 
 /* ================= Joueur en première personne ================= */
 class FPS{
- constructor(cam,x,y,z,yaw,w){this.cam=cam;this.p=V3(x,y,z);this.yaw=yaw;this.pitch=0;this.vy=0;this.on=false;this.v=new THREE.Vector2();this.w=w;this.bob=0;cam.rotation.order='YXZ'}
+ constructor(cam,x,y,z,yaw,w){this.cam=cam;this.p=V3(x,y,z);this.yaw=yaw;this.pitch=0;this.vy=0;this.on=false;this.v=new THREE.Vector2();this.w=w;this.bob=0;this.spd=6.5;this.ac=14;this.gv=22;this.jp=8;this.co=0;cam.rotation.order='YXZ'}
  update(dt){const p=this.p,f=(K.KeyW?1:0)-(K.KeyS?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0),sy=Math.sin(this.yaw),cy=Math.cos(this.yaw);
-  let wx=-sy*f+cy*s,wz=-cy*f-sy*s;const l=Math.hypot(wx,wz)||1;wx=wx/l*6.5*Math.min(1,Math.abs(f)+Math.abs(s));wz=wz/l*6.5*Math.min(1,Math.abs(f)+Math.abs(s));
-  const a=Math.min(1,dt*(this.on?14:3));this.v.x+=(wx-this.v.x)*a;this.v.y+=(wz-this.v.y)*a;
+  let wx=-sy*f+cy*s,wz=-cy*f-sy*s;const l=Math.hypot(wx,wz)||1;const mv=Math.min(1,Math.abs(f)+Math.abs(s))*this.spd;wx=wx/l*mv;wz=wz/l*mv;
+  const a=Math.min(1,dt*(this.on?this.ac:this.ac*.45));this.v.x+=(wx-this.v.x)*a;this.v.y+=(wz-this.v.y)*a;
   let nx=p.x+this.v.x*dt,nz=p.z+this.v.y*dt;
   if(this.w.block(nx,p.z,p.y,p.x,p.z)){nx=p.x;this.v.x=0}if(this.w.block(nx,nz,p.y,nx,p.z)){nz=p.z;this.v.y=0}
   this.bob+=Math.hypot(this.v.x,this.v.y)*dt*1.7;p.x=nx;p.z=nz;
-  if(K.Space&&this.on){this.vy=8;this.on=false}this.vy-=22*dt;p.y+=this.vy*dt;const g=this.w.ground(p.x,p.z,p.y);if(p.y<=g){p.y=g;this.vy=0;this.on=true}else if(p.y>g+.05)this.on=false;
-  this.cam.position.set(p.x,p.y+1.7+(this.on?Math.sin(this.bob)*.035:0),p.z);this.cam.rotation.set(this.pitch,this.yaw,0)}}
+  this.co=this.on?.12:Math.max(0,this.co-dt);if(K.Space&&this.co>0){this.vy=this.jp;this.on=false;this.co=0}this.vy-=this.gv*dt;p.y+=this.vy*dt;const g=this.w.ground(p.x,p.z,p.y);if(p.y<=g){p.y=g;this.vy=0;this.on=true}else if(p.y>g+.05)this.on=false;
+  this.w.clamp?.(this);this.cam.position.set(p.x,p.y+1.7+(this.on?Math.sin(this.bob)*.035:0),p.z);this.cam.rotation.set(this.pitch,this.yaw,0)}}
 
 /* ================= Modèles 3D tenus en main ================= */
 function vacModel(){const g=new THREE.Group(),
@@ -200,8 +200,8 @@ class Paint{
   for(let z=-30;z<=30;z+=10){this.pan(10,4,[-AX,2,z],Math.PI/2,0,'#b7c0c7');this.pan(10,4,[AX,2,z],-Math.PI/2,0,'#b7c0c7')}
   for(let x=-40;x<=40;x+=10){this.pan(10,4,[x,2,-AZ],0,0,'#b7c0c7');this.pan(10,4,[x,2,AZ],Math.PI,0,'#b7c0c7')}
   const pal=['#e8e6df','#9fb1c1','#c9b79c','#8aa08f','#d8c3c3','#6f7c8a','#e3c88a'];let sd=11;const R=()=>(sd=(sd*16807)%2147483647)/2147483647;
-  const T=[[8,4,8],[6,3,10],[3,6,3],[1.4,5.5,1.4],[14,3,1.2],[1.2,3,14],[2,1.2,2],[3,1,3],[4,2,4],[5,.8,5],[10,1.5,3]];
-  for(let i=0,k=0;i<400&&k<46;i++){const t=T[k%T.length],w=t[0]*(.8+R()*.5),h=t[1]*(.8+R()*.4),d=t[2]*(.8+R()*.5),x=(R()-.5)*82,z=(R()-.5)*62;
+  const T=[[4,2.2,4],[3,1.6,5],[1.6,3.2,1.6],[.9,2.8,.9],[7,1.8,.8],[.8,1.8,7],[1.5,.8,1.5],[2,.7,2],[2.5,1.2,2.5],[3,.6,3],[5,1,2]];
+  for(let i=0,k=0;i<1500&&k<62;i++){const t=T[k%T.length],w=t[0]*(.8+R()*.5),h=t[1]*(.8+R()*.4),d=t[2]*(.8+R()*.5),x=(R()-.5)*82,z=(R()-.5)*62;
    if(x<-30&&Math.abs(z)<8)continue;if(this.blocks.some(b=>x+w/2+2.5>b.x0&&x-w/2-2.5<b.x1&&z+d/2+2.5>b.z0&&z-d/2-2.5<b.z1))continue;
    this.addBlock(w,h,d,x,z,0,pal[k%pal.length]);k++;if(k%9==0){const b=this.blocks[this.blocks.length-1];this.addBlock(w*.55,h*.8,d*.55,x,z,b.y1,pal[(k+3)%pal.length])}}
   for(const p of this.panels)for(let i=0;i<p.st.length;i++){const x=p.ct[i*3],y=p.ct[i*3+1],z=p.ct[i*3+2];
@@ -211,7 +211,9 @@ class Paint{
   this.bg=new THREE.SphereGeometry(.38,14,10);this.shotG=new THREE.SphereGeometry(.1,8,6);this.sg=new THREE.SphereGeometry(1,16,12);
   this.fps=new FPS(this.cam,-40,0,0,-Math.PI/2,{
    block:(nx,nz,y)=>Math.abs(nx)>AX-.4||Math.abs(nz)>AZ-.4||this.blocks.some(b=>nx>b.x0-.35&&nx<b.x1+.35&&nz>b.z0-.35&&nz<b.z1+.35&&y<b.y1-.25&&y+1.8>b.y0),
-   ground:(x,z,y)=>{let g=0;for(const b of this.blocks)if(x>b.x0-.2&&x<b.x1+.2&&z>b.z0-.2&&z<b.z1+.2&&b.y1<=y+.4&&b.y1>g)g=b.y1;return g}});this.reset()}
+   ground:(x,z,y)=>{let g=0;for(const b of this.blocks)if(x>b.x0-.2&&x<b.x1+.2&&z>b.z0-.2&&z<b.z1+.2&&b.y1<=y+.4&&b.y1>g)g=b.y1;return g},
+   clamp:f=>{const p=f.p;p.x=clamp(p.x,-AX+.5,AX-.5);p.z=clamp(p.z,-AZ+.5,AZ-.5);if(p.y<0){p.y=0;f.vy=0}if(p.y>40){p.y=40;f.vy=Math.min(0,f.vy)}
+    for(const b of this.blocks)if(p.x>b.x0-.3&&p.x<b.x1+.3&&p.z>b.z0-.3&&p.z<b.z1+.3&&p.y<b.y1-.3&&p.y+1.8>b.y0){p.y=b.y1;f.vy=0}}});Object.assign(this.fps,{spd:15,ac:30,gv:30,jp:11});this.reset()}
  pan(w,h,p,ry,rx,color,o=null){const a=new Panel(w,h,V3(...p),ry,rx,color,o);this.panels.push(a);this.scene.add(a.mesh)}
  addBlock(w,h,d,x,z,y0,c){const b={x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,y0,y1:y0+h},yc=y0+h/2,P=Math.PI;this.blocks.push(b);
   this.pan(w,h,[x,yc,z+d/2],0,0,c,b);this.pan(w,h,[x,yc,z-d/2],P,0,c,b);this.pan(d,h,[x+w/2,yc,z],P/2,0,c,b);this.pan(d,h,[x-w/2,yc,z],-P/2,0,c,b);this.pan(w,d,[x,y0+h+.005,z],0,-P/2,c,b)}
@@ -269,16 +271,24 @@ App.env=new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(),.04).
 function ev(t){const d=document.createElement('div');d.textContent=t;const e=$('#events');e.prepend(d);while(e.children.length>6)e.lastChild.remove();setTimeout(()=>d.remove(),9000)}
 function banner(t){const b=$('#banner');b.textContent=t;b.style.display='block';clearTimeout(banner.h);banner.h=setTimeout(()=>b.style.display='none',2200)}
 
-/* TikFinity : API d'événements locale ws://127.0.0.1:21213/ (TikFinity doit tourner sur le même PC) */
-const Conn={ws:null,st(t){$('#cStatus').textContent=t},
- go(){try{this.ws?.close()}catch{}const url=$('#cUrl').value.trim();this.st('Connexion…');
-  try{const w=this.ws=new WebSocket(url);w.onopen=()=>{this.st('Connecté à TikFinity. Les cadeaux et likes agissent dans le jeu.');ev('TikFinity connecté')};
-   w.onmessage=e=>this.msg(e.data);w.onclose=()=>this.st('Déconnecté.');
-   w.onerror=()=>this.st("Échec. Vérifiez que TikFinity tourne sur ce PC. Une page HTTPS (GitHub Pages) peut être bloquée par le navigateur (contenu mixte / accès réseau local) : acceptez la demande d'autorisation si elle apparaît, ou ouvrez index.html en local.")}
-  catch(e){this.st('Erreur : '+e.message)}},
- msg(raw){let m;try{m=JSON.parse(raw)}catch{return}const d=m.data||{},who=d.nickname||d.user?.nickname||d.uniqueId||d.user?.uniqueId||'Spectateur';
-  if(m.event==='gift'){if(d.giftType===1&&d.repeatEnd===false)return;App.gift(d.giftName||d.gift?.name,d.repeatCount||1,who)}
-  else if(m.event==='like')App.likes(+d.likeCount||+d.count||1,who)}};
+/* TikFinity : API d'événements locale ws://127.0.0.1:21213/ (TikFinity doit tourner sur le même PC).
+   Les cadeaux sont reconnus automatiquement par leur nom (GIFTS) : aucune action à créer dans TikFinity. */
+const HELP="échec de connexion. TikFinity tourne-t-il sur ce PC ? Une page HTTPS (GitHub Pages) peut être bloquée par le navigateur : acceptez l'autorisation « réseau local » si elle s'affiche, ou ouvrez index.html en local.";
+const Conn={ws:null,want:false,n:0,gifts:0,likes:0,timer:null,
+ set(c,t){$('#tk').className=c;$('#tk span').textContent='TikFinity : '+t.split('.')[0].slice(0,60);$('#cStatus').textContent=t},
+ stats(){$('#cStats').textContent=`Événements reçus : ${this.n} · cadeaux : ${this.gifts} · likes : ${this.likes}`},
+ go(){this.stop(true);const url=$('#cUrl').value.trim();S.url=url;S.auto=1;save();this.want=true;this.open(url)},
+ open(url){clearTimeout(this.timer);this.set('wait','connexion…');let w;try{w=this.ws=new WebSocket(url)}catch(e){this.set('err','adresse invalide ('+e.message+')');return}
+  const to=setTimeout(()=>{if(w.readyState!==1){this.set('err','délai dépassé : '+HELP);try{w.close()}catch{}}},6000);
+  w.onopen=()=>{clearTimeout(to);this.set('ok','connecté');ev('TikFinity connecté')};
+  w.onmessage=e=>this.msg(e.data);
+  w.onerror=()=>{if(w.readyState!==1)this.set('err',HELP)};
+  w.onclose=()=>{clearTimeout(to);if(this.ws!==w)return;if(this.want){if($('#tk').className!=='err')this.set('wait','connexion perdue, nouvelle tentative…');this.timer=setTimeout(()=>this.open(url),3000)}else this.set('','déconnecté')}},
+ stop(silent){this.want=false;clearTimeout(this.timer);const w=this.ws;this.ws=null;try{w?.close()}catch{}if(!silent){S.auto=0;save()}this.set('','déconnecté')},
+ msg(raw){let m;try{m=JSON.parse(raw)}catch{return}(Array.isArray(m)?m:[m]).forEach(x=>this.ev(x));this.stats()},
+ ev(m){if(!m||!m.event)return;this.n++;const d=m.data||{},who=d.nickname||d.user?.nickname||d.uniqueId||d.user?.uniqueId||'Spectateur';
+  if(m.event==='gift'){if(d.giftType===1&&d.repeatEnd===false)return;this.gifts++;App.gift(d.giftName||d.gift?.name,d.repeatCount||d.amount||1,who)}
+  else if(m.event==='like'){const n=+d.likeCount||+d.count||1;this.likes+=n;App.likes(n,who)}}};
 
 /* ================= Événements d'interface ================= */
 $$('[data-k]').forEach(e=>{e.value=S[e.dataset.k];e.oninput=()=>{const k=e.dataset.k;S[k]=e.tagName==='SELECT'?e.value:(e.value===''||isNaN(+e.value)?DEF[k]:+e.value);save();apply()}});
@@ -293,7 +303,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  else if(a==='fs')document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{});
  else if(a==='again'){$('#goal').classList.remove('on');const g=App.g;App.wins=0;App.paused=false;App.cd=null;g.reset();App.hud();lock()}
  else if(a==='menu'){$('#goal').classList.remove('on');App.stop()}
- else if(b.id==='back')App.stop();else if(b.id==='cGo')Conn.go()});
+ else if(b.id==='back')App.stop();else if(b.id==='cGo')Conn.go();else if(b.id==='cStop')Conn.stop()});
 document.addEventListener('pointerlockchange',()=>{App.locked=document.pointerLockElement===cv;if(!App.locked)M.down=false;App.lockUI()});
 document.addEventListener('mousemove',e=>{const g=App.g;if(!App.locked||!g||App.paused)return;const k=.0022*S.sens;g.fps.yaw-=e.movementX*k;g.fps.pitch=clamp(g.fps.pitch-e.movementY*k,-1.5,1.5)});
 cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;Snd.init();if(App.locked)M.down=true;else if(App.g&&!App.paused)lock()});
@@ -301,4 +311,5 @@ addEventListener('pointerup',()=>M.down=false);addEventListener('blur',()=>{M.do
 addEventListener('keydown',e=>{if(App.locked&&e.code==='Space')e.preventDefault();K[e.code]=true});addEventListener('keyup',e=>K[e.code]=false);
 addEventListener('resize',()=>App.resize());
 addEventListener('error',e=>ev('Erreur : '+e.message));
+$('#cUrl').value=S.url||DEF.url;Conn.stats();Conn.set('','déconnecté');if(S.auto)Conn.go();
 apply();requestAnimationFrame(t=>App.loop(t));
