@@ -22,7 +22,7 @@ h2{font:32px 'Bowlby One',Impact,sans-serif;margin-bottom:14px}
 @keyframes glow{50%{box-shadow:0 0 28px 4px #ffc83d55}}
 label{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;margin:9px 0}
 input,select{font:inherit;background:#0008;color:var(--chalk);border:1px solid #fff3;border-radius:8px;padding:7px;width:100%}
-.modal{background:#10161aee;border:1px solid #fff3;border-radius:14px;padding:26px;max-width:480px;width:100%;margin:auto}
+.modal{max-height:92vh;overflow:auto;background:#10161aee;border:1px solid #fff3;border-radius:14px;padding:26px;max-width:480px;width:100%;margin:auto}
 #hud{position:fixed;inset:0;pointer-events:none;display:none;z-index:2;text-shadow:0 2px 6px #000c}
 #hud>*{position:absolute}
 #winBox{left:18px;top:14px;font:34px 'Bowlby One',sans-serif;background:#000a;padding:6px 16px;border-radius:12px}
@@ -86,7 +86,12 @@ body.fs-hide{cursor:crosshair}
  <label>Volume général<input type="range" min="0" max="1" step=".05" data-k="vol"></label>
  <label>Volume des effets<input type="range" min="0" max="1" step=".05" data-k="sfx"></label>
  <label>WIN nécessaires<input type="number" min="1" max="99" data-k="win"></label>
- <label>Likes par palier (commun aux jeux)<input type="number" min="1" max="999" data-k="likes"></label>
+ <label>Peinture : likes nécessaires<input type="number" min="1" max="99999" data-k="lkB"></label>
+ <label>Peinture : bombes rouges données<input type="number" min="1" max="99999" data-k="lkBn"></label>
+ <label>Billes : likes nécessaires<input type="number" min="1" max="99999" data-k="lkM"></label>
+ <label>Billes : billes données<input type="number" min="1" max="99999" data-k="lkMn"></label>
+ <label>Rampe : likes nécessaires<input type="number" min="1" max="99999" data-k="lkF"></label>
+ <label>Rampe : fruits donnés<input type="number" min="1" max="99999" data-k="lkFn"></label>
  <label>Sensibilité de la souris<input type="range" min=".3" max="2" step=".1" data-k="sens"></label>
  <label>Qualité graphique<select data-k="q"><option value="low">Basse</option><option value="med">Moyenne</option><option value="high">Haute (ombres)</option></select></label>
  <div class="col" style="margin-top:14px"><button class="b" data-a="fs">Plein écran</button><button class="b p" data-a="close">Fermer</button></div></div></div>
