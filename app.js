@@ -4,7 +4,7 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 /* ================= Utilitaires & réglages ================= */
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=u=>{u=clamp(u,0,1);return u*u*(3-2*u)};
-const DEF={vol:.8,sfx:.8,win:3,likes:2,q:'med',sens:1,url:'ws://127.0.0.1:21213/',auto:0};
+const DEF={vol:.8,sfx:.8,win:3,likes:2,lkB:2,lkBn:1,lkM:2,lkMn:50,lkF:2,lkFn:10,q:'med',sens:1,url:'ws://127.0.0.1:21213/',auto:0};
 const S=(()=>{try{return {...DEF,...JSON.parse(localStorage.getItem('tl_set')||'{}')}}catch{return {...DEF}}})();
 const save=()=>{try{localStorage.setItem('tl_set',JSON.stringify(S))}catch{}};
 const QUAL={low:{pr:1,cap:4000,sh:false,pt:300},med:{pr:1.5,cap:10000,sh:false,pt:700},high:{pr:2,cap:20000,sh:true,pt:1400}};
@@ -255,7 +255,7 @@ class Quarry{
  gift(g,qty,name){const d=(g.m||0)*qty;if(!d)return;
   if(d>0){this.makeDrone(name,d);this.peak=Math.max(this.peak,this.total())}
   else{let k=-d;const a=Math.min(k,this.m.n);this.m.n-=a;k-=a;for(const x of this.drones){const b=Math.min(k,x.rem);x.rem-=b;k-=b}}}
- like(n){this.lq+=n*50;this.peak=Math.max(this.peak,this.total())} /* 50 billes par palier de likes */
+ like(n){this.lq+=n;this.peak=Math.max(this.peak,this.total())}
  target(){const p=this.fps.p,y=this.fps.yaw;return V3(p.x-Math.sin(y)*5,p.y+13,p.z-Math.cos(y)*5)}
  makeDrone(name,n){const g=new THREE.Group(),dk=new THREE.MeshStandardMaterial({color:0x222831,metalness:.6,roughness:.4}),rot=[];
   g.add(new THREE.Mesh(new THREE.BoxGeometry(2.4,.6,1.5),dk));
@@ -396,6 +396,10 @@ const FRUITS=[
 const finTex=()=>{const c=document.createElement('canvas');c.width=256;c.height=32;const x=c.getContext('2d');for(let i=0;i<32;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)%2?'#fff':'#111';x.fillRect(i*8,j*8,8,8)}const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t};
 const bannerTex=()=>{const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.fillStyle='#ffc83d';x.fillRect(0,0,512,96);x.fillStyle='#111';x.font='bold 72px Sora,Arial';x.textAlign='center';x.fillText('ARRIVÉE',256,72);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t};
 
+/* Personnage 3e personne : 15 points (squelette), os = cylindres, contraintes de distance (ragdoll Verlet) */
+const CB=[[0,1.68,0],[0,1.48,0],[0,.98,0],[-.27,1.42,0],[.27,1.42,0],[-.33,1.12,0],[.33,1.12,0],[-.35,.85,0],[.35,.85,0],[-.13,.92,0],[.13,.92,0],[-.13,.5,0],[.13,.5,0],[-.13,.05,0],[.13,.05,0]];
+const CN=[[0,1,.09,0xe0a97c],[1,2,.14,0x2f7bff],[3,4,.06,0x2f7bff],[1,3,.07,0x2f7bff],[1,4,.07,0x2f7bff],[3,5,.06,0x2f7bff],[5,7,.055,0xe0a97c],[4,6,.06,0x2f7bff],[6,8,.055,0xe0a97c],[2,9,.08,0x23304a],[2,10,.08,0x23304a],[9,10,.07,0x23304a],[9,11,.08,0x23304a],[11,13,.07,0x23304a],[10,12,.08,0x23304a],[12,14,.07,0x23304a]];
+const CX=[[3,10],[4,9],[1,9],[1,10],[0,2],[3,2],[4,2]];
 class Ramp{
  constructor(){const q=this.q=QUAL[S.q];this.scene=baseScene(q,0x9fd4f0,170);this.cam=new THREE.PerspectiveCamera(75,1,.05,700);this.scene.add(this.cam);
   this.parts=new Particles(this.scene,q.pt*2);this.parts.o.material.size=.45;this.f=[];this.qn=0;this.acc=0;this.pq=0;this.pu=null;this.boxes=[];
@@ -421,21 +425,21 @@ class Ramp{
   this.fps=new FPS(this.cam,0,0,RZ0-3,0,{bx,
    block:(nx,nz,y)=>Math.abs(nx)>RW-.2||nz>RZ0-.5||nz<RZ0-RL+1||bx.some(b=>nx>b.x0-.35&&nx<b.x1+.35&&nz>b.z0-.35&&nz<b.z1+.35&&y<b.y1-.3),
    ground:(x,z,y)=>{let g=rh(z);for(const b of bx)if(x>b.x0-.2&&x<b.x1+.2&&z>b.z0-.2&&z<b.z1+.2&&b.y1<=y+.45&&b.y1>g)g=b.y1;return g}});
-  this.reset()}
- reset(){const f=this.fps;f.p.set(0,0,RZ0-3);f.yaw=0;f.pitch=0;f.rag=f.inv=f.kx=f.kz=0;f.v.set(0,0);f.vy=0;this.f.length=0;this.qn=0;this.pq=0;this.pu=null;this.gl.visible=false}
- complete(){const z=this.fps.p.z;return z<RZ0-RFIN&&z>RZ0-RL}
+  this.buildChar();this.reset()}
+ reset(){const f=this.fps;this.rag=this.inv=0;this.face=0;this.ph=0;f.p.set(0,0,RZ0-3);f.yaw=0;f.pitch=.3;f.rag=f.inv=f.kx=f.kz=0;f.v.set(0,0);f.vy=0;this.f.length=0;this.qn=0;this.pq=0;this.pu=null;this.gl.visible=false}
+ complete(){const z=this.rag>0?this.P[2].z:this.fps.p.z;return z<RZ0-RFIN&&z>RZ0-RL}
  progress(){return clamp((RZ0-this.fps.p.z)/RFIN,0,1)}
  label(){return `Rampe : ${Math.round(this.progress()*100)} % · ${this.f.length+this.qn} fruits`}
  gift(g,qty){this.qn+=(g.k||0)*qty*5}
- like(n){this.qn+=n*10} /* 10 fruits par palier de likes */
+ like(n){this.qn+=n}
  follow(){this.pq++}
  spawn(){const p=this.fps.p,t=(Math.random()*FRUITS.length)|0,d=FRUITS[t],near=Math.random()<.5,
   x=clamp(near?p.x+rnd(-3,3):p.x+rnd(-12,12),-RW+1,RW-1),z=clamp(p.z+(near?rnd(-14,-2):rnd(-24,3)),RZ0-RL+3,RZ0-3);
-  if(this.f.length>=1800)this.f.shift();this.f.push({t,x,y:rh(z)+rnd(14,30),z,vx:rnd(-1,1),vy:0,vz:rnd(0,3),r:Math.max(...d.s),a:rnd(0,6),b:rnd(0,6)})}
- hit(o){const f=this.fps;if(f.ragdoll(5)){const l=Math.hypot(o.vx,o.vz)||1;f.kx=o.vx/l*6;f.kz=o.vz/l*6;f.vy=5}
+  if(this.f.length>=1800)this.f.shift();this.f.push({age:0,t,x,y:rh(z)+rnd(14,30),z,vx:rnd(-1,1),vy:0,vz:rnd(0,3),r:Math.max(...d.s),a:rnd(0,6),b:rnd(0,6)})}
+ hit(o){const f=this.fps;this.startRag(5,o.vx*.6,4,o.vz*.6)
   this.parts.emit(o.x,o.y,o.z,FRUITS[o.t].c,30,5,2);Snd.pop();ev('🍎 Touché ! ragdoll 5 s')}
  fruit(dt){const p=this.fps.p,w=this.fps.w,L=this.f;
-  for(let i=L.length-1;i>=0;i--){const o=L[i];o.vy-=22*dt;o.x+=o.vx*dt;o.y+=o.vy*dt;o.z+=o.vz*dt;
+  for(let i=L.length-1;i>=0;i--){const o=L[i];if((o.age+=dt)>=10){L.splice(i,1);continue}o.vy-=22*dt;o.x+=o.vx*dt;o.y+=o.vy*dt;o.z+=o.vz*dt;
    if(Math.abs(o.x)>RW-.3){o.x=clamp(o.x,-RW+.3,RW-.3);o.vx*=-.5}
    for(const b of this.boxes)if(o.x>b.x0&&o.x<b.x1&&o.z>b.z0&&o.z<b.z1&&o.y<b.y1-.3){const a=o.x-b.x0,c=b.x1-o.x,d=o.z-b.z0,e=b.z1-o.z,m=Math.min(a,c,d,e);
     if(m===a){o.x=b.x0;o.vx=-Math.abs(o.vx)*.4}else if(m===c){o.x=b.x1;o.vx=Math.abs(o.vx)*.4}else if(m===d){o.z=b.z0;o.vz=-Math.abs(o.vz)*.4}else{o.z=b.z1;o.vz=Math.abs(o.vz)*.4}}
@@ -444,7 +448,7 @@ class Ramp{
    o.a+=o.vz*dt*2;o.b+=o.vx*dt*2;
    if(o.z>RZ0-1||o.y<-5){L.splice(i,1);continue}
    const dx=o.x-p.x,dz=o.z-p.z,dy=o.y-(p.y+.9);
-   if(dx*dx+dz*dz<(.5+o.r)**2&&Math.abs(dy)<1+o.r&&this.fps.inv<=0&&this.fps.rag<=0){this.hit(o);L.splice(i,1)}}
+   if(dx*dx+dz*dz<(.5+o.r)**2&&Math.abs(dy)<1+o.r&&this.inv<=0&&this.rag<=0){this.hit(o);L.splice(i,1)}}
   const cnt=FRUITS.map(()=>0),D=this.dm;
   for(const o of L){const k=cnt[o.t];if(k>=600)continue;cnt[o.t]++;D.position.set(o.x,o.y,o.z);D.rotation.set(o.a,o.b,0);D.scale.set(...FRUITS[o.t].s);D.updateMatrix();this.im[o.t].setMatrixAt(k,D.matrix)}
   this.im.forEach((m,i)=>{m.count=cnt[i];m.instanceMatrix.needsUpdate=true})}
@@ -453,19 +457,52 @@ class Ramp{
   const u=this.pu,p=f.p,y=f.yaw,fx=-Math.sin(y),fz=-Math.cos(y);u.t+=dt;
   const d=u.t<.3?5-3.9*ease(u.t/.3):1.1+3.9*ease((u.t-.3)/.3);
   G.position.set(p.x+fx*d,p.y+1.2,p.z+fz*d);G.rotation.set(0,y,0);
-  if(!u.hit&&u.t>=.3){u.hit=true;f.ragdoll(2,true);f.kx=-fx*17;f.kz=-fz*17;f.vy=Math.max(f.vy,4);Snd.boom();this.parts.emit(p.x+fx,p.y+1.2,p.z+fz,0xffffff,40,7,1);ev('👊 Coup de poing ! ragdoll 2 s')}
+  if(!u.hit&&u.t>=.3){u.hit=true;this.startRag(2,-fx*17,4,-fz*17,true);Snd.boom();this.parts.emit(p.x+fx,p.y+1.2,p.z+fz,0xffffff,40,7,1);ev('👊 Coup de poing ! ragdoll 2 s')}
   if(u.t>.6){this.pu=null;G.visible=false}}
- update(dt){this.fps.update(dt);this.cam.updateMatrixWorld(true);
+ update(dt){this.char(dt);this.cam.updateMatrixWorld(true);
   if(this.qn>0){this.acc+=dt*Math.max(60,this.qn/4);while(this.acc>=1&&this.qn>0){this.acc--;this.qn--;this.spawn()}}
   this.fruit(dt);this.punchStep(dt);this.parts.update(dt)}
+ buildChar(){this.P=CB.map(b=>V3(...b));this.Q=this.P.map(p=>p.clone());this.cs=[...CN.map(b=>[b[0],b[1]]),...CX].map(([a,b])=>[a,b,V3(...CB[a]).distanceTo(V3(...CB[b]))]);
+  const cy=new THREE.CylinderGeometry(1,1,1,10);this.bm=CN.map(b=>{const m=new THREE.Mesh(cy,new THREE.MeshStandardMaterial({color:b[3],roughness:.7}));m.castShadow=true;this.scene.add(m);return m});
+  this.hd=new THREE.Mesh(new THREE.SphereGeometry(.17,16,12),new THREE.MeshStandardMaterial({color:0xe0a97c,roughness:.7}));this.hd.castShadow=true;this.scene.add(this.hd);this.face=0;this.ph=0;this.rag=this.inv=0;this.acc2=0}
+ /* pose debout animée (marche / saut), dans le repère du personnage */
+ pose(){const f=this.fps,s=Math.sin(this.face),c=Math.cos(this.face),am=Math.min(1,Math.hypot(f.v.x,f.v.y)/6.5),ph=this.ph,air=!f.on;
+  CB.forEach((b,i)=>{let lx=b[0],ly=b[1],lz=b[2];
+   if(i===11||i===13)lz+=Math.sin(ph)*(i===11?.2:.38)*am;if(i===12||i===14)lz-=Math.sin(ph)*(i===12?.2:.38)*am;
+   if(i===13)ly+=Math.max(0,Math.cos(ph))*.14*am;if(i===14)ly+=Math.max(0,-Math.cos(ph))*.14*am;
+   if(i===5||i===7)lz-=Math.sin(ph)*(i===5?.15:.3)*am;if(i===6||i===8)lz+=Math.sin(ph)*(i===6?.15:.3)*am;
+   if(air&&i>10){lz+=i%2?.18:-.1;ly+=.12}
+   this.P[i].set(f.p.x+c*lx-s*lz,f.p.y+ly,f.p.z-s*lx-c*lz)})}
+ /* ragdoll : le corps garde la vitesse du joueur + l'impulsion, puis la physique (gravité, pente, obstacles, frottement) fait tout */
+ startRag(sec,vx,vy,vz,force){if(this.rag>0||(!force&&this.inv>0))return false;const f=this.fps,h=1/60;this.pose();const ux=f.v.x+vx,uy=f.vy+vy,uz=f.v.y+vz;
+  this.P.forEach((p,i)=>this.Q[i].set(p.x-ux*h,p.y-uy*h,p.z-uz*h));this.rag=this.rt=sec;this.acc2=0;return true}
+ sim(){const P=this.P,Q=this.Q,h=1/60;
+  for(let i=0;i<15;i++){const p=P[i],q=Q[i],x=p.x,y=p.y,z=p.z;p.x+=(x-q.x)*.996;p.y+=(y-q.y)*.996-22*h*h;p.z+=(z-q.z)*.996;q.set(x,y,z)}
+  for(let k=0;k<8;k++){for(const[a,b,r]of this.cs){const A=P[a],B=P[b],dx=B.x-A.x,dy=B.y-A.y,dz=B.z-A.z,l=Math.hypot(dx,dy,dz)||1e-6,d=(l-r)/l*.5;A.x+=dx*d;A.y+=dy*d;A.z+=dz*d;B.x-=dx*d;B.y-=dy*d;B.z-=dz*d}
+   for(let i=0;i<15;i++)this.col(P[i],Q[i])}}
+ col(p,q){p.x=clamp(p.x,-RW+.3,RW-.3);p.z=Math.min(p.z,RZ0-.5);
+  for(const b of this.boxes)if(p.x>b.x0&&p.x<b.x1&&p.z>b.z0&&p.z<b.z1&&p.y<b.y1-.15){const a=p.x-b.x0,c=b.x1-p.x,d=p.z-b.z0,e=b.z1-p.z,m=Math.min(a,c,d,e);if(m===a)p.x=b.x0;else if(m===c)p.x=b.x1;else if(m===d)p.z=b.z0;else p.z=b.z1}
+  const g=this.fps.w.ground(p.x,p.z,p.y)+.08;
+  if(p.y<g){const sl=(rh(p.z+.1)-rh(p.z-.1))/.2,l=Math.hypot(1,sl),ny=1/l,nz=-sl/l,d=(g-p.y)*ny;p.y+=d*ny;p.z+=d*nz;q.lerp(p,.04)}}
+ stand(){const f=this.fps,h=this.P[2];f.p.set(h.x,f.w.ground(h.x,h.z,h.y),h.z);f.v.set(0,0);f.vy=0;f.on=true;this.inv=1.5;this.pose()}
+ char(dt){const f=this.fps;if(this.inv>0)this.inv-=dt;
+  if(this.rag>0){this.rag-=dt;this.acc2+=dt;let n=0;while(this.acc2>=1/60&&n++<5){this.acc2-=1/60;this.sim()}if(this.rag<=0){this.rag=0;this.stand()}}
+  else{f.pitch=clamp(f.pitch,-.4,1.2);f.update(dt);const sp=Math.hypot(f.v.x,f.v.y);if(sp>.5)this.face=Math.atan2(-f.v.x,-f.v.y);this.ph+=sp*dt*1.5;this.pose()}
+  const P=this.P,up=V3(0,1,0),d=V3(0,0,0);CN.forEach((b,i)=>{const A=P[b[0]],B=P[b[1]],m=this.bm[i];d.subVectors(B,A);const l=d.length()||1e-4;m.position.addVectors(A,B).multiplyScalar(.5);m.scale.set(b[2],l,b[2]);m.quaternion.setFromUnitVectors(up,d.divideScalar(l))});this.hd.position.copy(P[0]);
+  this.camUpd(dt)}
+ blocked(x,y,z){return y<rh(z)+.3||this.boxes.some(b=>x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1&&y<b.y1+.2)}
+ camUpd(dt){const f=this.fps,c=this.cam,t=this.rag>0?this.P[2]:f.p,tx=t.x,ty=(this.rag>0?t.y:t.y+.9)+.8,tz=t.z,pc=clamp(f.pitch,-.4,1.2),cp=Math.cos(pc),
+  dx=Math.sin(f.yaw)*cp,dy=Math.sin(pc),dz=Math.cos(f.yaw)*cp;let k=1;
+  for(let s=1;s<=10;s++){const u=s*.6;if(this.blocked(tx+dx*u,ty+dy*u+.05*u,tz+dz*u)){k=(s-1)/10;break}}
+  const u=6*k;c.position.lerp(V3(tx+dx*u,ty+dy*u+.3*k,tz+dz*u),1-Math.exp(-14*dt));c.lookAt(tx,ty,tz)}
  dispose(){disposeScene(this.scene)}}
 
 /* ================= Application : manager, WIN, HUD, test, TikFinity ================= */
 const renderer=new THREE.WebGLRenderer({canvas:$('#c'),antialias:true});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
 const cv=$('#c');
 const App={g:null,wins:0,cd:null,paused:false,test:false,likeAcc:0,env:null,lastN:0,locked:false,
- start(kind,col){this.stop(true);this.wins=0;this.cd=null;this.paused=false;this.g=kind==='g1'?new Quarry():kind==='g3'?new Ramp():new Paint(col);this.resize();
-  $('#menu').classList.remove('on');$('#hud').style.display='block';$('#test').classList.add('on');$('#cross').style.display='block';this.hud();this.lockUI();ev(kind==='g1'?'Fosse aux billes lancée':kind==='g3'?'Rampe aux fruits lancée':'Bataille de peinture lancée')},
+ start(kind,col){this.stop(true);this.wins=0;this.likeAcc=0;this.cd=null;this.paused=false;this.g=kind==='g1'?new Quarry():kind==='g3'?new Ramp():new Paint(col);this.resize();
+  $('#menu').classList.remove('on');$('#hud').style.display='block';$('#test').classList.add('on');$('#cross').style.display=kind==='g3'?'none':'block';this.hud();this.lockUI();ev(kind==='g1'?'Fosse aux billes lancée':kind==='g3'?'Rampe aux fruits lancée':'Bataille de peinture lancée')},
  stop(keep){if(this.g){this.g.dispose();this.g=null}Snd.vac(false);document.exitPointerLock?.();$('#hud').style.display='none';$('#cross').style.display='none';$('#lock').style.display='none';$('#cd').style.display=$('#banner').style.display='none';if(!keep)$('#menu').classList.add('on')},
  lockUI(){$('#lock').style.display=this.g&&!this.locked&&!this.paused?'block':'none'},
  resize(){renderer.setSize(innerWidth,innerHeight,false);if(this.g){this.g.cam.aspect=innerWidth/innerHeight;this.g.cam.updateProjectionMatrix()}},
@@ -476,7 +513,8 @@ const App={g:null,wins:0,cd:null,paused:false,test:false,likeAcc:0,env:null,last
   ev(`🎁 ${who} · ${qty}× ${g.n}`);Snd.chime();if(!this.g)return;
   if(g.w){this.changeWins(g.w*qty,`(${g.n})`);banner(`${g.w*qty>0?'+':''}${g.w*qty} WIN`)}else this.g.gift(g,qty,who)},
  /* réglage de likes commun aux 3 jeux (par palier : 1 bombe rouge (peinture), 50 billes (fosse), 10 fruits (rampe)) */
- likes(n,who){if(!this.g)return;this.likeAcc+=n;const b=Math.floor(this.likeAcc/S.likes);if(b>0){this.likeAcc-=b*S.likes;this.g.like(b);ev(`❤ ${who} · ${n} likes → ${b} palier(s) de likes`)}},
+ likes(n,who){const g=this.g;if(!g)return;const t=g instanceof Paint?['lkB','lkBn','bombe(s) rouge(s)']:g instanceof Quarry?['lkM','lkMn','bille(s)']:['lkF','lkFn','fruit(s)'];
+  this.likeAcc+=n;const per=Math.max(1,S[t[0]]),b=Math.floor(this.likeAcc/per);if(b>0){this.likeAcc-=b*per;const q=b*Math.max(1,S[t[1]]);g.like(q);ev(`❤ ${who} · ${n} likes → ${q} ${t[2]}`)}},
  follow(who){ev(`👤 ${who} · nouveau follow`);Snd.chime();if(this.g?.follow)this.g.follow()},
  win(dt){const g=this.g;if(g.complete()){if(this.cd==null)this.cd=10;this.cd-=dt;const n=Math.max(1,Math.ceil(this.cd)),c=$('#cd');c.style.display='block';c.textContent=n;if(n!==this.lastN){this.lastN=n;Snd.tick()}
    if(this.cd<=0){this.cd=null;c.style.display='none';this.changeWins(1,'(victoire)');banner('+1 WIN !');g.reset()}}
