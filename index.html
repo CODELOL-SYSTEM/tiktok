@@ -36,7 +36,8 @@ input,select{font:inherit;background:#0008;color:var(--chalk);border:1px solid #
 #cd{left:50%;top:42%;transform:translate(-50%,-50%);font:30vmin/1 'Bowlby One',sans-serif;color:var(--sun);-webkit-text-stroke:5px #000;display:none}
 #banner{left:50%;top:22%;transform:translateX(-50%);font:7vmin 'Bowlby One',sans-serif;color:#fff;display:none;white-space:nowrap}
 #back{left:18px;bottom:18px;pointer-events:auto;padding:9px 14px}
-#cross{position:fixed;width:34px;height:34px;margin:-17px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #000a;display:none;z-index:2;pointer-events:none}
+#cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;background:#fff;border-radius:50%;box-shadow:0 0 0 2px #000a,0 0 0 9px #ffffff44;display:none;z-index:2;pointer-events:none}
+#lock{position:fixed;left:50%;top:62%;transform:translateX(-50%);display:none;z-index:3;background:#000d;padding:14px 22px;border-radius:12px;font-weight:700;pointer-events:none;text-align:center}
 #test{right:14px;bottom:14px;pointer-events:auto;display:none;background:#000b;padding:10px;border-radius:12px;width:min(330px,60vw)}
 body.test #test.on{display:block}
 #test .g{display:grid;grid-template-columns:1fr 1fr;gap:5px}
@@ -47,13 +48,14 @@ body.fs-hide{cursor:crosshair}
 <body>
 <canvas id="c"></canvas>
 <div id="cross"></div>
+<div id="lock">Cliquez dans le jeu pour reprendre le contrôle<br><small>ZQSD · Espace · Souris · Clic gauche · Échap libère la souris (menu, mode test)</small></div>
 <div id="hud">
  <div id="winBox">🏆 <b id="wins">0</b> <span>/ <i id="tgt" style="font-style:normal">3</i> WIN</span></div>
  <div id="events"></div>
  <div id="prog"><span id="lbl"></span><div id="bar"><div id="fill"></div></div></div>
  <div id="cd"></div><div id="banner"></div>
  <button class="b" id="back">Menu principal</button>
- <div id="test"><b>Mode test</b>
+ <div id="test"><b>Mode test</b> <small>(Échap pour cliquer ici)</small>
   <input id="tName" placeholder="Nom du spectateur" value="Testeur">
   <input id="tQty" type="number" min="1" value="1" title="Quantité">
   <div class="g" id="tGifts"></div>
@@ -63,7 +65,7 @@ body.fs-hide{cursor:crosshair}
 
 <div class="pane on" id="menu"><div class="col" style="max-width:560px">
  <h1>Fosse &amp; Peinture</h1>
- <p class="sub">Deux jeux pour votre LIVE : vider la carrière aux billes, ou repeindre toute la carte avant que les bombes rouges ne s'en mêlent.</p>
+ <p class="sub">Deux jeux en première personne pour votre LIVE. ZQSD pour bouger, Espace pour sauter, souris pour viser, clic gauche pour aspirer ou tirer.</p>
  <label>Objectif (nombre de WIN)<input type="number" min="1" max="99" data-k="win"></label>
  <button class="b p" data-a="g1">Jeu 1 : La fosse aux billes</button>
  <button class="b p" data-a="g2">Jeu 2 : La bataille de peinture</button>
