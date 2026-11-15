@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Double Jeu TikTok LIVE</title>
+<title>Triple Jeu TikTok LIVE</title>
 <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Sora:wght@400;700&display=swap" rel="stylesheet">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <style>
@@ -33,7 +33,7 @@ input,select{font:inherit;background:#0008;color:var(--chalk);border:1px solid #
 #events{right:16px;top:14px;width:min(320px,45vw);display:flex;flex-direction:column;gap:5px;align-items:flex-end}
 #events div{background:#000b;padding:5px 11px;border-radius:8px;font-weight:700;animation:in .3s}
 @keyframes in{from{transform:translateX(30px);opacity:0}}
-#cd{left:50%;top:42%;transform:translate(-50%,-50%);font:30vmin/1 'Bowlby One',sans-serif;color:var(--sun);-webkit-text-stroke:5px #000;display:none}
+#cd{left:50%;top:50%;transform:translate(-50%,-50%);font:30vmin/1 'Bowlby One',sans-serif;color:var(--sun);-webkit-text-stroke:5px #000;display:none;z-index:4}
 #banner{left:50%;top:22%;transform:translateX(-50%);font:7vmin 'Bowlby One',sans-serif;color:#fff;display:none;white-space:nowrap}
 #back{left:18px;bottom:18px;pointer-events:auto;padding:9px 14px}
 #cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;background:#fff;border-radius:50%;box-shadow:0 0 0 2px #000a,0 0 0 9px #ffffff44;display:none;z-index:2;pointer-events:none}
@@ -62,16 +62,18 @@ body.fs-hide{cursor:crosshair}
   <input id="tName" placeholder="Nom du spectateur" value="Testeur">
   <input id="tQty" type="number" min="1" value="1" title="Quantité">
   <div class="g" id="tGifts"></div>
+  <button class="b" id="tFollow" style="margin-top:6px;width:100%">👤 Simuler un follow</button>
   <div class="g" style="margin-top:6px"><button class="b" id="tLike">❤ Simuler likes</button><input id="tLikeN" type="number" min="1" value="10" title="Nombre de likes"></div>
  </div>
 </div>
 
 <div class="pane on" id="menu"><div class="col" style="max-width:560px">
- <h1>Fosse &amp; Peinture</h1>
- <p class="sub">Deux jeux en première personne pour votre LIVE. ZQSD pour bouger, Espace pour sauter, souris pour viser, clic gauche pour aspirer ou tirer.</p>
+ <h1>Fosse, Peinture &amp; Fruits</h1>
+ <p class="sub">Trois jeux en première personne pour votre LIVE. ZQSD pour bouger, Espace pour sauter, souris pour viser, clic gauche pour aspirer ou tirer.</p>
  <label>Objectif (nombre de WIN)<input type="number" min="1" max="99" data-k="win"></label>
  <button class="b p" data-a="g1">Jeu 1 : La fosse aux billes</button>
  <button class="b p" data-a="g2">Jeu 2 : La bataille de peinture</button>
+ <button class="b p" data-a="g3">Jeu 3 : La rampe aux fruits</button>
  <button class="b" data-a="set">Paramètres</button>
  <button class="b" data-a="test">Mode test : désactivé</button>
  <button class="b" data-a="conn">Connexion TikTok LIVE</button>
@@ -84,7 +86,7 @@ body.fs-hide{cursor:crosshair}
  <label>Volume général<input type="range" min="0" max="1" step=".05" data-k="vol"></label>
  <label>Volume des effets<input type="range" min="0" max="1" step=".05" data-k="sfx"></label>
  <label>WIN nécessaires<input type="number" min="1" max="99" data-k="win"></label>
- <label>Likes par bombe rouge<input type="number" min="1" max="999" data-k="likes"></label>
+ <label>Likes par palier (commun aux jeux)<input type="number" min="1" max="999" data-k="likes"></label>
  <label>Sensibilité de la souris<input type="range" min=".3" max="2" step=".1" data-k="sens"></label>
  <label>Qualité graphique<select data-k="q"><option value="low">Basse</option><option value="med">Moyenne</option><option value="high">Haute (ombres)</option></select></label>
  <div class="col" style="margin-top:14px"><button class="b" data-a="fs">Plein écran</button><button class="b p" data-a="close">Fermer</button></div></div></div>
