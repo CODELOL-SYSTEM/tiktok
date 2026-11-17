@@ -4,7 +4,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Sora:wght@400;700&display=swap" rel="stylesheet">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <style>
-:root{--ink:#10161a;--chalk:#f1ecdc;--sun:#ffc83d;--blue:#2f7bff;--green:#2ed36a;--red:#ff3040}
+:root{--ink:#10161a;--chalk:#f1ecdc;--sun:#ffc83d;--blue:#2f7bff;--green:#2ed36a;--red:#ff3040;--violet:#a855f7}
 *{box-sizing:border-box;margin:0}
 body{font:15px Sora,system-ui,sans-serif;color:var(--chalk);background:var(--ink);overflow:hidden;height:100vh}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -46,15 +46,50 @@ body.test #test.on{display:block}
 #test .b{padding:7px 9px;font-size:13px}#test input{margin:5px 0;padding:5px}
 body.fs-hide{cursor:crosshair}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- Nouveau menu : cartes avec logos ---- */
+#menu{background:radial-gradient(ellipse at 15% 0,#3b2a6b 0,transparent 55%),radial-gradient(ellipse at 90% 110%,#1f5a46 0,transparent 55%),#0d1218}
+.logo{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+.logo svg{width:clamp(48px,8vw,84px);flex:none;filter:drop-shadow(0 0 14px #ffc83d88)}
+.tag{display:inline-block;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--sun);opacity:.9;margin-bottom:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:6px 0 4px}
+.card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:16px;min-height:150px;background:linear-gradient(160deg,var(--c1),var(--c2));border:1px solid #ffffff40;color:#fff;box-shadow:0 10px 30px #0006;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 18px 40px #000a,0 0 30px var(--c1)}
+.card svg{width:54px;height:54px;filter:drop-shadow(0 3px 6px #0008)}
+.card strong{font:18px 'Bowlby One',Impact,sans-serif;line-height:1.05}
+.card small{opacity:.85;font-size:12.5px;line-height:1.35}
+.card .num{position:absolute;right:12px;top:6px;font:44px 'Bowlby One',sans-serif;opacity:.22}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.row .b{display:flex;gap:9px;align-items:center;padding:10px 15px;font-size:14px}.row .b svg{width:20px;height:20px}
+.row .b:hover{transform:translateY(-3px)}
+
+/* ---- Jeu 4 : barre de cadeaux, bulle, caméra cassée ---- */
+#gbar{left:50%;top:46px;transform:translateX(-50%);display:none;gap:8px;flex-wrap:wrap;justify-content:center;max-width:72vw}
+.gi{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1033dd,#0a2144dd);border:1px solid #a855f7aa;border-radius:12px;padding:5px 11px 5px 7px;font-size:12px;line-height:1.2;box-shadow:0 0 14px #a855f744}
+.gi i{font-style:normal;font-size:26px;filter:drop-shadow(0 0 6px #fff6)}.gi b{display:block;font-size:12.5px}.gi span{opacity:.8}
+#bub{left:50%;top:21%;transform:translateX(-50%);max-width:min(640px,86vw);text-align:center;font:700 clamp(16px,2.6vw,26px)/1.2 Sora,sans-serif;background:#fffffff2;color:#1a1033;padding:10px 20px;border-radius:20px;border:3px solid #a855f7;display:none;box-shadow:0 8px 24px #0008}
+#crack{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.6s;background:radial-gradient(circle at 50% 50%,#ffffff22,#00000066)}
+#crack.on{opacity:1;transition:none}
+#crack svg{width:100%;height:100%}#crack b{position:absolute;left:50%;top:44%;transform:translateX(-50%) rotate(-3deg);font:7vmin 'Bowlby One',sans-serif;color:#ff3040;text-shadow:0 0 18px #000;animation:flick .25s infinite}
+@keyframes flick{50%{opacity:.35}}
 </style></head>
 <body>
 <canvas id="c"></canvas>
 <div id="tk"><i></i><span>TikFinity : déconnecté</span></div>
 <div id="cross"></div>
 <div id="lock">Cliquez dans le jeu pour reprendre le contrôle<br><small>ZQSD · Espace · Souris · Clic gauche · Échap libère la souris (menu, mode test)</small></div>
+<div id="crack"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><g stroke="#fff" fill="none" stroke-width=".35" stroke-linecap="round"><path d="M50 50L12 8M50 50L88 14M50 50L96 62M50 50L30 96M50 50L2 70M50 50L66 2M12 8L20 30L8 46M88 14L72 30L90 44M30 96L44 76L36 62M96 62L78 66M66 2L60 22M2 70L24 62"/><circle cx="50" cy="50" r="6"/><circle cx="50" cy="50" r="14"/><circle cx="50" cy="50" r="26"/></g></svg><b>SIGNAL PERDU</b></div>
 <div id="hud">
- <div id="winBox">🏆 <b id="wins">0</b> <span>/ <i id="tgt" style="font-style:normal">3</i> WIN</span></div>
+ <div id="winBox">🏆 <b id="wins">0</b> <span>/ <i id="tgt" style="font-style:normal">3</i> <u id="wl" style="text-decoration:none">WIN</u></span></div>
  <div id="events"></div>
+ <div id="gbar">
+  <div class="gi"><i>🍅</i><div><b>Rose · 1 pièce</b><span>Tomate sur le visage</span></div></div>
+  <div class="gi"><i>🥚</i><div><b>GG · 1 pièce</b><span>Œuf sur le visage</span></div></div>
+  <div class="gi"><i>🚿</i><div><b>Capybara · 30 pièces</b><span>Douche : rage à 0 %</span></div></div>
+  <div class="gi"><i>🐱</i><div><b>Parfum</b><span>Le chat griffe (sans sang)</span></div></div>
+  <div class="gi"><i>💗</i><div><b>Cœur dans les mains</b><span>Rage à 100 % !</span></div></div>
+ </div>
+ <div id="bub"></div>
  <div id="prog"><span id="lbl"></span><div id="bar"><div id="fill"></div></div></div>
  <div id="cd"></div><div id="banner"></div>
  <button class="b" id="back">Menu principal</button>
@@ -67,16 +102,30 @@ body.fs-hide{cursor:crosshair}
  </div>
 </div>
 
-<div class="pane on" id="menu"><div class="col" style="max-width:560px">
- <h1>Fosse, Peinture &amp; Fruits</h1>
- <p class="sub">Trois jeux en première personne pour votre LIVE. ZQSD pour bouger, Espace pour sauter, souris pour viser, clic gauche pour aspirer ou tirer.</p>
+<div class="pane on" id="menu"><div class="col" style="max-width:900px">
+ <span class="tag">● TikTok LIVE · 4 mini-jeux</span>
+ <div class="logo"><svg viewBox="0 0 64 64"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc83d"/><stop offset="1" stop-color="#ff3040"/></linearGradient></defs><circle cx="32" cy="32" r="29" fill="#10161a" stroke="url(#lg)" stroke-width="4"/><path d="M26 18v28l22-14z" fill="url(#lg)"/></svg><h1>Fosse, Peinture &amp; Fruits</h1></div>
+ <p class="sub">Trois jeux en première personne pour votre LIVE, plus un quatrième : un gamer qui rage. ZQSD pour bouger, Espace pour sauter, souris pour viser, clic gauche pour aspirer ou tirer.</p>
  <label>Objectif (nombre de WIN)<input type="number" min="1" max="99" data-k="win"></label>
- <button class="b p" data-a="g1">Jeu 1 : La fosse aux billes</button>
- <button class="b p" data-a="g2">Jeu 2 : La bataille de peinture</button>
- <button class="b p" data-a="g3">Jeu 3 : La rampe aux fruits</button>
- <button class="b" data-a="set">Paramètres</button>
- <button class="b" data-a="test">Mode test : désactivé</button>
- <button class="b" data-a="conn">Connexion TikTok LIVE</button>
+ <div class="cards">
+  <button class="b card" data-a="g1" style="--c1:#ff8a3d;--c2:#c2410c"><span class="num">1</span>
+   <svg viewBox="0 0 64 64"><circle cx="22" cy="38" r="12" fill="#ff4d6d"/><circle cx="42" cy="40" r="12" fill="#4dc9ff"/><circle cx="32" cy="22" r="12" fill="#ffd93d"/><circle cx="27" cy="18" r="3" fill="#fff" opacity=".7"/><circle cx="17" cy="34" r="3" fill="#fff" opacity=".7"/><circle cx="37" cy="36" r="3" fill="#fff" opacity=".7"/></svg>
+   <strong>La fosse aux billes</strong><small>Aspire des milliers de billes avec ton aspirateur.</small></button>
+  <button class="b card" data-a="g2" style="--c1:#2f7bff;--c2:#1e3a8a"><span class="num">2</span>
+   <svg viewBox="0 0 64 64"><path d="M32 6C32 6 14 28 14 40a18 18 0 0036 0C50 28 32 6 32 6z" fill="#fff"/><path d="M32 14C32 14 20 31 20 40a12 12 0 0024 0C44 31 32 14 32 14z" fill="#2ed36a"/><circle cx="50" cy="14" r="5" fill="#ff3040"/><circle cx="12" cy="18" r="3" fill="#ffc83d"/></svg>
+   <strong>La bataille de peinture</strong><small>Peins toute l'arène avant que les bombes rouges n'arrivent.</small></button>
+  <button class="b card" data-a="g3" style="--c1:#2ed36a;--c2:#0f6b3a"><span class="num">3</span>
+   <svg viewBox="0 0 64 64"><path d="M4 54L60 22v10L4 62z" fill="#d9c9a0"/><circle cx="30" cy="22" r="11" fill="#e02020"/><path d="M30 11c0-5 4-7 7-7-1 4-3 7-7 7z" fill="#2e9e3a"/><circle cx="26" cy="19" r="3" fill="#fff" opacity=".6"/><circle cx="50" cy="16" r="6" fill="#ff8a00"/></svg>
+   <strong>La rampe aux fruits</strong><small>Grimpe la rampe en esquivant la pluie de fruits.</small></button>
+  <button class="b card" data-a="g4" style="--c1:#a855f7;--c2:#4c1d95"><span class="num">4</span>
+   <svg viewBox="0 0 64 64"><circle cx="32" cy="34" r="22" fill="#f2b98d"/><path d="M10 28C12 8 30 4 40 6s16 8 14 22C46 18 22 16 10 28z" fill="#2a1a12"/><path d="M19 28l11 5M45 28l-11 5" stroke="#2a1a12" stroke-width="3.5" stroke-linecap="round"/><circle cx="24" cy="36" r="3.2" fill="#fff"/><circle cx="40" cy="36" r="3.2" fill="#fff"/><circle cx="25" cy="37" r="1.6" fill="#111"/><circle cx="39" cy="37" r="1.6" fill="#111"/><path d="M22 47q10-7 20 0z" fill="#5a0b14"/><path d="M14 16c-4 6-2 12 0 14M50 16c4 6 2 12 0 14" stroke="#ff3040" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+   <strong>Le mec qui rage</strong><small>Les likes font monter la rage. 5 crises pour gagner.</small></button>
+ </div>
+ <div class="row">
+  <button class="b" data-a="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Paramètres</button>
+  <button class="b" data-a="test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6M10 3v6L4 20h16L14 9V3"/></svg><span>Mode test : désactivé</span></button>
+  <button class="b" data-a="conn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12a10 10 0 0114 0M8 15a6 6 0 018 0"/><circle cx="12" cy="19" r="1.5"/></svg>Connexion TikTok LIVE</button>
+ </div>
 </div></div>
 
 <div class="pane" id="pick"><div class="modal"><h2>Votre couleur</h2>
@@ -92,6 +141,10 @@ body.fs-hide{cursor:crosshair}
  <label>Billes : billes données<input type="number" min="1" max="99999" data-k="lkMn"></label>
  <label>Rampe : likes nécessaires<input type="number" min="1" max="99999" data-k="lkF"></label>
  <label>Rampe : fruits donnés<input type="number" min="1" max="99999" data-k="lkFn"></label>
+ <label>Rage : likes par déclenchement (3 tomates + 5 œufs)<input type="number" min="1" max="99999" data-k="lkR"></label>
+ <label>Rage : % de rage gagné par déclenchement<input type="number" min="1" max="100" data-k="lkRp"></label>
+ <label>Rage : volume de la voix<input type="range" min="0" max="1" step=".05" data-k="voice"></label>
+ <label>Rage : couleur du vêtement<select data-k="outfit"><option value="v">Violet</option><option value="b">Bleu</option><option value="r">Rouge</option><option value="g">Vert</option></select></label>
  <label>Sensibilité de la souris<input type="range" min=".3" max="2" step=".1" data-k="sens"></label>
  <label>Qualité graphique<select data-k="q"><option value="low">Basse</option><option value="med">Moyenne</option><option value="high">Haute (ombres)</option></select></label>
  <div class="col" style="margin-top:14px"><button class="b" data-a="fs">Plein écran</button><button class="b p" data-a="close">Fermer</button></div></div></div>
